@@ -19,3 +19,7 @@
 
 # Go workspace file
 go.work
+
+zcock
+IP2LOCATION-LITE-DB5.BIN
+*.bak
