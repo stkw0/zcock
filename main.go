@@ -9,9 +9,14 @@ import (
 )
 
 func getAnimalIdx(hour int) int {
+	if hour > 23 {
+		return 0
+	}
+
 	for i := 23; i != 1; i -= 2 {
 		if hour >= i {
-			return 12 - ((i + 1) / 2)
+
+			return (i + 1) / 2
 		}
 	}
 
@@ -66,9 +71,10 @@ func main() {
 	hour := diffTime.Hour()
 	//fmt.Println(diffTime)
 	//fmt.Println(diffNoon)
-	//fmt.Println(hour)
+	//	fmt.Println(hour)
 	//fmt.Println(now)
 
 	idx := getAnimalIdx(hour)
+	//	fmt.Println(idx)
 	fmt.Printf("%c", hours[idx])
 }
