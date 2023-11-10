@@ -1,0 +1,12 @@
+module zcock
+
+go 1.21.3
+
+require (
+	github.com/adrg/xdg v0.4.0
+	github.com/glendc/go-external-ip v0.1.0
+	github.com/ip2location/ip2location-go v8.3.0+incompatible
+	github.com/sixdouglas/suncalc v0.0.0-20230303054245-f8bc8c69d09e
+)
+
+require golang.org/x/sys v0.0.0-20211025201205-69cdffdb9359 // indirect

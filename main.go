@@ -1,12 +1,13 @@
 package main
 
 import (
-	"fmt"
-	"os"
 	"errors"
+	"fmt"
+	"github.com/adrg/xdg"
 	"github.com/glendc/go-external-ip"
 	"github.com/ip2location/ip2location-go"
-	"github.com/pschou/go-suncalc"
+	"github.com/sixdouglas/suncalc"
+	"os"
 	"time"
 )
 
@@ -60,7 +61,11 @@ func getPublicIpAddr() string {
 }
 
 func getGeolocation(ip string) (float64, float64) {
-	db, err := ip2location.OpenDB("IP2LOCATION-LITE-DB5.BIN")
+	dbPath, err := xdg.SearchDataFile("IP2LOCATION-LITE-DB5.BIN")
+	if err != nil {
+		panic(err)
+	}
+	db, err := ip2location.OpenDB(dbPath)
 	if err != nil {
 		panic(err)
 	}
@@ -82,10 +87,10 @@ func getSolarNoon(now time.Time, lat, long float64) time.Time {
 
 func currentSolarHour(lat, long float64) int {
 	var now = time.Now()
-	
+
 	solarNoon := getSolarNoon(now, lat, long)
 	tzNoon := time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, time.UTC)
-	
+
 	diffNoon := solarNoon.Sub(tzNoon)
 	//fmt.Println(tzNoon, " ", solarNoon)
 	diffTime := now.Add(diffNoon)
@@ -100,11 +105,11 @@ func currentSolarHour(lat, long float64) int {
 func main() {
 	hours := []rune{'🐀', '🐂', '🐅', '🐇', '🐉', '🐍', '🐎', '🐐', '🐒', '🐓', '🐕', '🐖'}
 
-	ip := getPublicIpAddr() 
+	ip := getPublicIpAddr()
 
 	lat, long := getGeolocation(ip)
 	hour := currentSolarHour(lat, long)
 	idx := getAnimalIdx(hour)
-//	fmt.Println(idx)
+	//	fmt.Println(idx)
 	fmt.Printf("%c", hours[idx])
 }
