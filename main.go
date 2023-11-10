@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"github.com/adrg/xdg"
@@ -10,6 +12,14 @@ import (
 	"os"
 	"time"
 )
+
+const geolocCacheFile = "/tmp/zcock_geoloc_cache"
+
+func handleError(err error) {
+	if err != nil {
+		panic(err)
+	}
+}
 
 func getAnimalIdx(hour int) int {
 	if hour == 23 || hour == 0 {
@@ -26,12 +36,21 @@ func getAnimalIdx(hour int) int {
 	return 1
 }
 
+func floatToByte(f float32) []byte {
+	var buf bytes.Buffer
+	err := binary.Write(&buf, binary.BigEndian, f)
+	if err != nil {
+		fmt.Println("binary.Write failed:", err)
+	}
+	return buf.Bytes()
+}
+
 func getPublicIpAddr() string {
-	if _, err := os.Stat("/tmp/zcock_ip_cache"); err == nil {
-		ip, err := os.ReadFile("/tmp/zcock_ip_cache")
-		if err != nil {
-			panic(err)
-		}
+	ipCacheFile := "/tmp/zcock_ip_cache"
+
+	if _, err := os.Stat(ipCacheFile); err == nil {
+		ip, err := os.ReadFile(ipCacheFile)
+		handleError(err)
 		return string(ip)
 	} else if !errors.Is(err, os.ErrNotExist) {
 		panic(err)
@@ -46,33 +65,59 @@ func getPublicIpAddr() string {
 
 	ip := tip.String()
 
-	f, err := os.Create("/tmp/zcock_ip_cache")
-	if err != nil {
-		panic(err)
-	}
+	f, err := os.Create(ipCacheFile)
+	handleError(err)
 	defer f.Close()
 
 	_, err = f.WriteString(ip)
-	if err != nil {
-		panic(err)
-	}
+	handleError(err)
 
 	return ip
 }
 
+func getCachedGeolocation() (float64, float64, bool) {
+	if _, err := os.Stat(geolocCacheFile); err == nil {
+		fd, err := os.Open(geolocCacheFile)
+		handleError(err)
+		defer fd.Close()
+
+		var lat, long float32
+		err = binary.Read(fd, binary.BigEndian, &lat)
+		handleError(err)
+		err = binary.Read(fd, binary.BigEndian, &long)
+		handleError(err)
+
+		return float64(lat), float64(long), true
+
+	} else if !errors.Is(err, os.ErrNotExist) {
+		panic(err)
+	}
+
+	return 0, 0, false
+}
+
 func getGeolocation(ip string) (float64, float64) {
 	dbPath, err := xdg.SearchDataFile("IP2LOCATION-LITE-DB5.BIN")
-	if err != nil {
-		panic(err)
-	}
+	handleError(err)
+
 	db, err := ip2location.OpenDB(dbPath)
-	if err != nil {
-		panic(err)
-	}
+	handleError(err)
+
 	results, err := db.Get_all(ip)
-	if err != nil {
-		panic(err)
-	}
+	handleError(err)
+
+	f, err := os.Create(geolocCacheFile)
+	handleError(err)
+	defer f.Close()
+
+	lat := floatToByte(results.Latitude)
+	long := floatToByte(results.Longitude)
+
+	_, err = f.Write(lat)
+	handleError(err)
+
+	_, err = f.Write(long)
+	handleError(err)
 
 	return float64(results.Latitude), float64(results.Longitude)
 }
@@ -105,11 +150,13 @@ func currentSolarHour(lat, long float64) int {
 func main() {
 	hours := []rune{'🐀', '🐂', '🐅', '🐇', '🐉', '🐍', '🐎', '🐐', '🐒', '🐓', '🐕', '🐖'}
 
-	ip := getPublicIpAddr()
+	lat, long, b := getCachedGeolocation()
+	if !b {
+		ip := getPublicIpAddr()
+		lat, long = getGeolocation(ip)
+	}
 
-	lat, long := getGeolocation(ip)
 	hour := currentSolarHour(lat, long)
 	idx := getAnimalIdx(hour)
-	//	fmt.Println(idx)
 	fmt.Printf("%c", hours[idx])
 }
