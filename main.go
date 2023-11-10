@@ -2,9 +2,9 @@ package main
 
 import (
 	"fmt"
+	"github.com/glendc/go-external-ip"
 	"github.com/ip2location/ip2location-go"
 	"github.com/pschou/go-suncalc"
-	"github.com/glendc/go-external-ip"
 	"time"
 )
 
@@ -14,9 +14,9 @@ func getAnimalIdx(hour int) int {
 			return 12 - ((i + 1) / 2)
 		}
 	}
-	
+
 	return 0
-	
+
 }
 
 func main() {
@@ -30,21 +30,21 @@ func main() {
 	consensus := externalip.DefaultConsensus(nil, nil)
 	consensus.UseIPProtocol(4)
 
-	 ip, err := consensus.ExternalIP()
-	 if err != nil {
-		 panic(err)
-	 }
+	tip, err := consensus.ExternalIP()
+	if err != nil {
+		panic(err)
+	}
 
-//	fmt.Println(ip.String())
-	results, err := db.Get_all(ip.String())
+	ip := tip.String()
+	results, err := db.Get_all(ip)
 
 	if err != nil {
 		fmt.Print(err)
 		return
 	}
 
-//	fmt.Printf("latitude: %f\n", results.Latitude)
-//	fmt.Printf("longitude: %f\n", results.Longitude)
+	//	fmt.Printf("latitude: %f\n", results.Latitude)
+	//	fmt.Printf("longitude: %f\n", results.Longitude)
 
 	var now = time.Now()
 
@@ -55,15 +55,20 @@ func main() {
 	// get the times for today, latitude, longitude, height below or above the
 	// horizon, and in timezone
 	var times = suncalc.GetTimes(now, lat, long)
+	// var times = suncalc.GetTimesWithObserver(now, suncalc.Observer{lat, long, 0, now.Location()})
 
-	tzNoon := time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, now.Location())
+	tzNoon := time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, time.UTC)
 
 	solarNoon := times[suncalc.SolarNoon].Value
 	diffNoon := tzNoon.Sub(solarNoon)
-	hour := now.Add(diffNoon).Hour()
-//	fmt.Println(diffNoon)
-//	fmt.Println(hour)
-	
+	//fmt.Println(tzNoon, " ", solarNoon)
+	diffTime := now.Add(diffNoon)
+	hour := diffTime.Hour()
+	//fmt.Println(diffTime)
+	//fmt.Println(diffNoon)
+	//fmt.Println(hour)
+	//fmt.Println(now)
+
 	idx := getAnimalIdx(hour)
 	fmt.Printf("%c", hours[idx])
 }
