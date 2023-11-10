@@ -9,18 +9,18 @@ import (
 )
 
 func getAnimalIdx(hour int) int {
-	if hour > 23 {
+	if hour == 23 || hour == 0 {
 		return 0
 	}
 
 	for i := 23; i != 1; i -= 2 {
 		if hour >= i {
-
 			return (i + 1) / 2
 		}
+
 	}
 
-	return 0
+	return 1
 
 }
 
