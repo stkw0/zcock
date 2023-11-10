@@ -4,6 +4,8 @@ zcock is a small program that prints an emoji according to the [traditional Chin
 
 The first execution of `zcock` would require an internet connection.
 
+It also has two options. One which returns the public IP address for your current connection and another one which returns the geolocation coordinates for your public IP address.
+
 ## How it works?
 
 `zcock` reads the public IPv4 address from an external service. Then uses the IP2Location LITE data available from http://www.ip2location.com to get the aproximate geolocation for the given IPv4 address. With that the program calculates the solar position for the current longitude which allows to show an accurate hour at the given location. 

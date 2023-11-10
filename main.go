@@ -9,6 +9,7 @@ import (
 	"github.com/glendc/go-external-ip"
 	"github.com/ip2location/ip2location-go"
 	"github.com/sixdouglas/suncalc"
+	flag "github.com/spf13/pflag"
 	"os"
 	"time"
 )
@@ -148,6 +149,29 @@ func currentSolarHour(lat, long float64) int {
 }
 
 func main() {
+	var printIp = flag.BoolP("ip", "i", false, "Get your public IP")
+	var printGeolocation = flag.BoolP("geoloc", "g", false, "Get geolocation coordinates for your public IP")
+
+	flag.Parse()
+
+	cmdMode := false
+	if *printIp {
+		cmdMode = true
+		fmt.Println(getPublicIpAddr())
+	}
+
+	if *printGeolocation {
+		cmdMode = true
+		ip := getPublicIpAddr()
+		lat, long := getGeolocation(ip)
+		fmt.Println("Latitude: ", lat)
+		fmt.Println("Longitude: ", long)
+	}
+
+	if cmdMode {
+		return
+	}
+
 	hours := []rune{'🐀', '🐂', '🐅', '🐇', '🐉', '🐍', '🐎', '🐐', '🐒', '🐓', '🐕', '🐖'}
 
 	lat, long, b := getCachedGeolocation()
