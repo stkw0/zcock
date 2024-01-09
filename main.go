@@ -131,7 +131,7 @@ func getSolarNoon(now time.Time, lat, long float64) time.Time {
 	return solarNoon
 }
 
-func currentSolarHour(lat, long float64) int {
+func currentSolarHour(lat, long float64) (int, int) {
 	var now = time.Now()
 
 	solarNoon := getSolarNoon(now, lat, long)
@@ -145,12 +145,13 @@ func currentSolarHour(lat, long float64) int {
 	//fmt.Println(hour)
 	//fmt.Println(now)
 
-	return diffTime.Hour()
+	return diffTime.Hour(), diffTime.Minute()
 }
 
 func main() {
 	var printIp = flag.BoolP("ip", "i", false, "Get your public IP")
 	var printGeolocation = flag.BoolP("geoloc", "g", false, "Get geolocation coordinates for your public IP")
+	var numeric = flag.BoolP("numeric", "n", false, "Show numeric date")
 
 	flag.Parse()
 
@@ -168,19 +169,23 @@ func main() {
 		fmt.Println("Longitude: ", long)
 	}
 
-	if cmdMode {
-		return
-	}
-
-	hours := []rune{'🐀', '🐂', '🐅', '🐇', '🐉', '🐍', '🐎', '🐐', '🐒', '🐓', '🐕', '🐖'}
-
 	lat, long, b := getCachedGeolocation()
 	if !b {
 		ip := getPublicIpAddr()
 		lat, long = getGeolocation(ip)
 	}
+	hour, minute := currentSolarHour(lat, long)
 
-	hour := currentSolarHour(lat, long)
+	if *numeric {
+		cmdMode = true
+		fmt.Printf("%d:%d\n", hour, minute)
+	}
+
+	if cmdMode {
+		return
+	}
+
 	idx := getAnimalIdx(hour)
+	hours := []rune{'🐀', '🐂', '🐅', '🐇', '🐉', '🐍', '🐎', '🐐', '🐒', '🐓', '🐕', '🐖'}
 	fmt.Printf("%c", hours[idx])
 }
