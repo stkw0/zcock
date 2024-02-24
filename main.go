@@ -152,18 +152,27 @@ func main() {
 	var printIp = flag.BoolP("ip", "i", false, "Get your public IP")
 	var printGeolocation = flag.BoolP("geoloc", "g", false, "Get geolocation coordinates for your public IP")
 	var numeric = flag.BoolP("numeric", "n", false, "Show numeric date")
+	var forcedIp = flag.String("force", "", "Use an arbitrary IP")
 
 	flag.Parse()
 
 	cmdMode := false
+
+	var ip string
+	if *forcedIp != "" {
+		cmdMode = true
+		ip = *forcedIp
+	} else {
+		ip = getPublicIpAddr()
+	}
+
 	if *printIp {
 		cmdMode = true
-		fmt.Println(getPublicIpAddr())
+		fmt.Println(ip)
 	}
 
 	if *printGeolocation {
 		cmdMode = true
-		ip := getPublicIpAddr()
 		lat, long := getGeolocation(ip)
 		fmt.Println("Latitude: ", lat)
 		fmt.Println("Longitude: ", long)
