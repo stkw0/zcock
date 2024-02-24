@@ -153,6 +153,8 @@ func main() {
 	var printGeolocation = flag.BoolP("geoloc", "g", false, "Get geolocation coordinates for your public IP")
 	var numeric = flag.BoolP("numeric", "n", false, "Show numeric date")
 	var forcedIp = flag.String("force", "", "Use an arbitrary IP")
+	var forcedLat = flag.Float64("lat", 0, "Force a given latitude")
+	var forcedLong = flag.Float64("long", 0, "Force a given longitude")
 
 	flag.Parse()
 
@@ -171,15 +173,28 @@ func main() {
 		fmt.Println(ip)
 	}
 
+	var lat, long float64
+	if *forcedLat == 0 && *forcedLong == 0 {
+		lat, long = getGeolocation(ip)
+	} else if *forcedLat != 0 && *forcedLong != 0 {
+		lat = *forcedLat
+		long = *forcedLong
+	} else if *forcedLat != 0 {
+		lat = *forcedLat
+		_, long = getGeolocation(ip)
+	} else if *forcedLong != 0 {
+		long = *forcedLong
+		lat, _ = getGeolocation(ip)
+	}
+
 	if *printGeolocation {
 		cmdMode = true
-		lat, long := getGeolocation(ip)
+
 		fmt.Println("Latitude: ", lat)
 		fmt.Println("Longitude: ", long)
 	}
 
 	//lat, long, b := getCachedGeolocation()
-	lat, long := getGeolocation(ip)
 	hour, minute := currentSolarHour(lat, long)
 
 	if *numeric {
