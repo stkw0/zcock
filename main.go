@@ -178,11 +178,8 @@ func main() {
 		fmt.Println("Longitude: ", long)
 	}
 
-	lat, long, b := getCachedGeolocation()
-	if !b {
-		ip := getPublicIpAddr()
-		lat, long = getGeolocation(ip)
-	}
+	//lat, long, b := getCachedGeolocation()
+	lat, long := getGeolocation(ip)
 	hour, minute := currentSolarHour(lat, long)
 
 	if *numeric {
