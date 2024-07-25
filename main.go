@@ -107,19 +107,6 @@ func getGeolocation(ip string) (float64, float64) {
 	results, err := db.Get_all(ip)
 	handleError(err)
 
-	f, err := os.Create(geolocCacheFile)
-	handleError(err)
-	defer f.Close()
-
-	lat := floatToByte(results.Latitude)
-	long := floatToByte(results.Longitude)
-
-	_, err = f.Write(lat)
-	handleError(err)
-
-	_, err = f.Write(long)
-	handleError(err)
-
 	return float64(results.Latitude), float64(results.Longitude)
 }
 
