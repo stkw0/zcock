@@ -12,6 +12,8 @@ import (
 	flag "github.com/spf13/pflag"
 	"os"
 	"time"
+	"net"
+	"strings"
 )
 
 const geolocCacheFile = "/tmp/zcock_geoloc_cache"
@@ -56,9 +58,21 @@ func getPublicIpAddr() string {
 	} else if !errors.Is(err, os.ErrNotExist) {
 		panic(err)
 	}
-
-	consensus := externalip.DefaultConsensus(nil, nil)
+	
+	ifaces, err := net.Interfaces()
+	handleError(err)
+	
+	if !availableIface(ifaces) {
+		fmt.Fprintln(os.Stderr, "Network not available")
+		os.Exit(1)
+	}
+	
+	cfg := externalip.DefaultConsensusConfig().WithTimeout(time.Second*2)
+	consensus := externalip.NewConsensus(cfg, nil)
 	consensus.UseIPProtocol(4)
+	consensus.AddVoter(externalip.NewHTTPSource("https://myexternalip.com/raw"), 3) 
+	consensus.AddVoter(externalip.NewHTTPSource("http://ifconfig.io/ip"), 1)
+
 	tip, err := consensus.ExternalIP()
 	if err != nil {
 		panic(err)
@@ -133,6 +147,21 @@ func currentSolarHour(lat, long float64) (int, int) {
 	//fmt.Println(now)
 
 	return diffTime.Hour(), diffTime.Minute()
+}
+
+func availableIface(ifaces []net.Interface) bool {
+	for _, i := range ifaces {
+		f := (net.FlagUp | net.FlagRunning)
+		if i.Flags & f == f {
+			s, err := os.ReadFile("/sys/class/net/"+i.Name+"/operstate")
+			handleError(err)
+			if strings.Trim(string(s), "\n") == "up" {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 func main() {
