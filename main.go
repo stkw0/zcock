@@ -139,12 +139,7 @@ func currentSolarHour(lat, long float64) (int, int) {
 	tzNoon := time.Date(now.Year(), now.Month(), now.Day(), 12, 0, 0, 0, time.UTC)
 
 	diffNoon := solarNoon.Sub(tzNoon)
-	//fmt.Println(tzNoon, " ", solarNoon)
-	diffTime := now.Add(diffNoon)
-	//fmt.Println(diffTime)
-	//fmt.Println(diffNoon)
-	//fmt.Println(hour)
-	//fmt.Println(now)
+	diffTime := now.Add(-diffNoon)
 
 	return diffTime.Hour(), diffTime.Minute()
 }
